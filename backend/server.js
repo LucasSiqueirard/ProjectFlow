@@ -44,6 +44,61 @@ app.post('/projects', async (req, res) => {
   }
 });
 
+// GET
+app.get('/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const project = await prisma.project.findUnique({
+      // Nota: Se o seu ID no schema.prisma for String (UUID), remova o Number() e use apenas id: id
+      where: { id: Number(id) }, 
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Projeto não encontrado' });
+    }
+
+    res.json(project);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar o projeto' });
+  }
+});
+
+// PUT
+app.put('/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description } = req.body;
+
+    const updatedProject = await prisma.project.update({
+      where: { id: Number(id) },
+      data: { title, description },
+    });
+
+    res.json(updatedProject);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao atualizar o projeto' });
+  }
+});
+
+// DELETE
+app.delete('/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.project.delete({
+      where: { id: Number(id) },
+    });
+
+    res.status(204).send(); 
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao deletar o projeto' });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
