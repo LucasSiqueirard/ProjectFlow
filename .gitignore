@@ -1,0 +1,27 @@
+# Dependencias Node.js
+**/node_modules/
+
+# Arquivos de ambiente e credenciais
+**/.env
+**/.env.*
+**/*.env
+
+# Builds e caches do Angular
+**/dist/
+**/.angular/
+
+# Configuracoes locais de assistentes e ferramentas
+**/.claude*/
+**/.windsurf*/
+
+# Ambientes virtuais e caches Python
+**/venv/
+**/.venv/
+**/.venv-*/
+**/__pycache__/
+**/*.py[cod]
+
+# Logs e arquivos do sistema operacional
+**/*.log
+.DS_Store
+Thumbs.db
