@@ -7,7 +7,21 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [{ provide: ProjectFlowApi, useValue: { loadDashboard: () => of({ projects: [], tasks: [] }) } }],
+      providers: [{
+        provide: ProjectFlowApi,
+        useValue: {
+          loadDashboard: () => of({ projects: [], tasks: [] }),
+          loadAnalytics: () => of({
+            generatedAt: '',
+            completionRateByProject: [],
+            taskDistribution: [],
+            averageLeadTimeDays: null,
+            averageLeadTimeByProject: [],
+            leadTimeDataAvailable: false,
+            leadTimeNote: null,
+          }),
+        },
+      }],
     }).compileComponents();
   });
 

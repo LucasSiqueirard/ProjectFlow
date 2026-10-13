@@ -20,9 +20,11 @@ model Project {
 model Task {
   id          Int      @id @default(autoincrement())
   title       String
+  description String?
   completed   Boolean  @default(false)
   status      String   @default("PENDING")
   priority    String   @default("MEDIUM")
+  dueDate     DateTime? @db.Date
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -32,11 +34,12 @@ model Task {
 }
 
 model TaskHistory {
-  id        Int      @id @default(autoincrement())
-  taskId    Int
-  status    String
-  changedAt DateTime @default(now())
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  id             Int      @id @default(autoincrement())
+  taskId         Int
+  previousStatus String?
+  status         String
+  changedAt      DateTime @default(now())
+  task           Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId, changedAt])
 }

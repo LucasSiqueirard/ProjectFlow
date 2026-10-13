@@ -1,0 +1,124 @@
+<div class="task-modal-backdrop" (click)="closed.emit()">
+  <section
+    class="task-modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'task-modal-title-' + task.id"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="task-modal-header">
+      <div>
+        <span class="task-modal-key">PF-{{ task.id }}</span>
+        <h2 [id]="'task-modal-title-' + task.id">Detalhes da tarefa</h2>
+      </div>
+      <button class="close-button" type="button" aria-label="Fechar detalhes" (click)="closed.emit()">×</button>
+    </header>
+
+    @if (errorMessage()) {
+      <div class="modal-error" role="alert">{{ errorMessage() }}</div>
+    }
+    @if (successMessage()) {
+      <div class="modal-success" role="status" aria-live="polite">{{ successMessage() }}</div>
+    }
+
+    <div class="task-modal-body">
+      <form class="task-edit-form" (ngSubmit)="save()">
+        <label>
+          Título
+          <input
+            [ngModel]="title()"
+            (ngModelChange)="title.set($event)"
+            name="title"
+            maxlength="120"
+            required
+          />
+        </label>
+
+        <label>
+          Descrição
+          <textarea
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+            name="description"
+            rows="4"
+            maxlength="2000"
+            placeholder="Adicione detalhes sobre esta tarefa..."
+          ></textarea>
+        </label>
+
+        <label>
+          Prazo
+          <input
+            type="date"
+            [ngModel]="dueDate()"
+            (ngModelChange)="dueDate.set($event)"
+            name="dueDate"
+          />
+        </label>
+
+        <div class="form-row">
+          <label>
+            Prioridade
+            <select [ngModel]="priority()" (ngModelChange)="priority.set($event)" name="priority">
+              @for (item of priorities; track item.value) {
+                <option [value]="item.value">{{ item.label }}</option>
+              }
+            </select>
+          </label>
+
+          <label>
+            Status
+            <select [ngModel]="status()" (ngModelChange)="status.set($event)" name="status">
+              @for (item of statuses; track item.value) {
+                <option [value]="item.value">{{ item.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        @if (sla; as taskSla) {
+          <div class="modal-sla">
+            <span class="sla-caption">Status do prazo</span>
+            <span class="sla-badge" [class]="'sla-badge sla-' + taskSla.status.toLowerCase()">
+              <span class="sla-clock" aria-hidden="true">◷</span>{{ taskSla.label }}
+            </span>
+          </div>
+        }
+
+        <button class="save-button" type="submit" [disabled]="isSaving() || !title().trim()">
+          {{ isSaving() ? 'Salvando...' : 'Salvar alterações' }}
+        </button>
+      </form>
+
+      <section class="task-history" aria-labelledby="task-history-title">
+        <h3 id="task-history-title">Linha do tempo</h3>
+        @if (isLoadingHistory()) {
+          <p class="history-message" role="status">Carregando histórico...</p>
+        } @else if (historyErrorMessage()) {
+          <p class="history-message history-error" role="alert">{{ historyErrorMessage() }}</p>
+        } @else if (history().length) {
+          <ol class="timeline">
+            @for (entry of history(); track entry.id) {
+              <li class="timeline-entry">
+                <span class="timeline-marker" aria-hidden="true"></span>
+                <div class="timeline-content">
+                  <p>
+                    @if (entry.previousStatus) {
+                      Status alterado de <strong>{{ statusLabel(entry.previousStatus) }}</strong>
+                      para <strong>{{ statusLabel(entry.status) }}</strong>
+                    } @else {
+                      Status definido como <strong>{{ statusLabel(entry.status) }}</strong>
+                    }
+                  </p>
+                  <time [attr.datetime]="entry.changedAt">{{ formatTimestamp(entry.changedAt) }}</time>
+                </div>
+              </li>
+            }
+          </ol>
+        } @else {
+          <p class="history-message">Ainda não há alterações de status registradas.</p>
+        }
+      </section>
+    </div>
+  </section>
+</div>

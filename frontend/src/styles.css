@@ -1,12 +1,12 @@
 @import './app/app.css';
 
-:root { color-scheme: light; --blue: #0c66e4; --ink: #172b4d; --line: #dfe1e6; font-family: "Aptos", "Segoe UI Variable", "Segoe UI", sans-serif; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+:root { color-scheme: light; --purple: #6e45d8; --purple-hover: #5933b7; --purple-soft: #f0eaff; --purple-border: #bba6f5; --purple-ink: #4d2c91; --ink: #172b4d; --line: #dfe1e6; font-family: "Aptos", "Segoe UI Variable", "Segoe UI", sans-serif; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: #f4f5f7; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: #faf9fd; }
 button,input,textarea,select { font-family: inherit; }
-button:focus-visible,a:focus-visible,select:focus-visible { outline: 2px solid #4c9aff; outline-offset: 2px; }
+button:focus-visible,a:focus-visible,select:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 
-.cdk-drag-preview { box-sizing: border-box; border: 1px solid #4c9aff; border-radius: 5px; background: #fff; box-shadow: 0 12px 24px #091e4233; transform: rotate(1deg); }
+.cdk-drag-preview { box-sizing: border-box; border: 1px solid var(--purple); border-radius: 5px; background: #fff; box-shadow: 0 12px 24px #091e4233; }
 .cdk-drag-placeholder { opacity: .22; }
 .cdk-drag-animating { transition: transform 180ms cubic-bezier(0, 0, .2, 1); }
 .cdk-drop-list-dragging .task-card:not(.cdk-drag-placeholder) { transition: transform 180ms cubic-bezier(0, 0, .2, 1); }
@@ -17,9 +17,15 @@ button:focus-visible,a:focus-visible,select:focus-visible { outline: 2px solid #
 .priority-badge { display: inline-flex; align-items: center; min-height: 19px; padding: 0 7px; border-radius: 3px; font-size: 9px; font-weight: 750; text-transform: uppercase; }
 .priority-URGENT { background: #ffebe6; color: #bf2600; }
 .priority-HIGH { background: #fff0b3; color: #974f0c; }
-.priority-MEDIUM { background: #deebff; color: #0747a6; }
+.priority-MEDIUM { background: var(--purple-soft); color: var(--purple-ink); }
 .priority-LOW { background: #e3fcef; color: #006644; }
 .drag-handle { color: #97a0af; cursor: grab; font-size: 17px; line-height: 1; }
 .drag-handle:active { cursor: grabbing; }
 .task-card.cdk-drag-dragging { opacity: .96; }
-.task-drag-placeholder { min-height: 94px; border: 1px dashed #4c9aff; border-radius: 4px; background: #deebff66; }
+.task-drag-placeholder { min-height: 94px; border: 1px dashed var(--purple-border); border-radius: 4px; background: #f0eaff80; }
+.sla-badge { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; border-radius: 999px; padding: 4px 8px; font-size: 10px; font-weight: 700; line-height: 1.3; white-space: nowrap; }
+.sla-clock { font-size: 13px; line-height: 1; }
+.sla-overdue { background: #ffebe6; color: #bf2600; }
+.sla-due_today { background: #fff7d6; color: #974f00; }
+.sla-on_track { background: #e3fcef; color: #006644; }
+.sla-completed { background: #f4f5f7; color: #5e6c84; }

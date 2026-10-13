@@ -28,8 +28,8 @@ export interface ProjectPayload { title: string; description: string; }
     h2 { margin: 0; color: #172b4d; font-size: 20px; font-weight: 650; }.close-button { width: 29px; height: 29px; border: 0; border-radius: 4px; background: transparent; color: #6b778c; font-size: 22px; cursor: pointer; }.close-button:hover { background: #f4f5f7; }
     label { display: block; margin: 15px 0 6px; color: #344563; font-size: 12px; font-weight: 650; }label span { color: #de350b; }
     input,textarea { box-sizing: border-box; width: 100%; padding: 9px 10px; border: 1px solid #dfe1e6; border-radius: 4px; color: #172b4d; font: inherit; font-size: 12px; resize: vertical; }
-    input:focus,textarea:focus { outline: 2px solid #4c9aff; outline-offset: 1px; }.field-error { display: block; margin-top: 5px; color: #bf2600; font-size: 10px; }
-    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 23px; }.cancel-button,.save-button { min-height: 34px; padding: 0 12px; border: 1px solid #dfe1e6; border-radius: 4px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }.cancel-button { color: #344563; background: #fff; }.save-button { border-color: #0c66e4; background: #0c66e4; color: #fff; }
+    input:focus,textarea:focus { outline: 2px solid var(--purple); outline-offset: 1px; }.field-error { display: block; margin-top: 5px; color: #bf2600; font-size: 10px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 23px; }.cancel-button,.save-button { min-height: 34px; padding: 0 12px; border: 1px solid #dfe1e6; border-radius: 4px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }.cancel-button { color: #344563; background: #fff; }.save-button { border-color: var(--purple); background: var(--purple); color: #fff; }
     @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }@keyframes rise-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   `,
 })

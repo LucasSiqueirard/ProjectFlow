@@ -16,8 +16,9 @@
     <header class="topbar"><div class="breadcrumbs"><span>Projetos</span><span aria-hidden="true">/</span><strong>{{ selectedProject()?.title ?? 'Visão geral' }}</strong></div><div class="topbar-right"><div class="view-switch"><button class="tab-button" type="button" [class.is-active]="currentView() === 'board'" (click)="setView('board')">Quadro</button><button class="tab-button" type="button" [class.is-active]="currentView() === 'analytics'" (click)="setView('analytics')">Analytics</button></div><span class="connection-dot" aria-hidden="true"></span><span>ProjectFlow</span><span class="topbar-avatar" aria-label="Perfil da equipe">PF</span></div></header>
     <section class="dashboard-content">
       @if (errorMessage()) { <div class="alert" role="alert"><span>{{ errorMessage() }}</span><button type="button" (click)="errorMessage.set('')" aria-label="Fechar aviso">Fechar</button></div> }
+      @if (successMessage()) { <div class="success-alert" role="status" aria-live="polite"><span>{{ successMessage() }}</span><button type="button" (click)="successMessage.set('')" aria-label="Fechar confirmação">Fechar</button></div> }
       @if (currentView() === 'analytics') {
-        <div class="page-heading"><div><p class="eyebrow">ANALYTICS / PRODUTIVIDADE</p><h1>Indicadores do projeto</h1><p class="project-description">Métricas geradas automaticamente pelo script Python e atualizadas em tempo real.</p></div></div>
+        <div class="page-heading"><div><p class="eyebrow">ANALYTICS / PRODUTIVIDADE</p><h1>Indicadores do projeto</h1><p class="project-description">Métricas geradas automaticamente pelo script Python e atualizadas em tempo real.</p></div><div class="heading-actions"><button class="secondary-button" type="button" (click)="exportTaskReport()" [disabled]="!tasks().length" aria-label="Exportar relatório de tarefas em CSV">Exportar Relatório (CSV)</button></div></div>
         @if (analyticsLoading()) {
           <div class="loading-state" role="status">Carregando métricas...</div>
         } @else if (!analytics()) {
@@ -65,13 +66,58 @@
           <section class="welcome-state"><div class="welcome-icon" aria-hidden="true">P</div><p class="eyebrow">ESPAÇO DE TRABALHO</p><h1>Organize o trabalho. <span>Avance juntos.</span></h1><p>Crie seu primeiro projeto para começar a acompanhar tarefas e progresso.</p><button class="primary-button" type="button" (click)="openProjectForm()">+ Criar projeto</button></section>
         } @else {
           <div class="page-heading"><div><p class="eyebrow">ESPAÇO DE TRABALHO / QUADRO</p><h1>{{ selectedProject()?.title }}</h1><p class="project-description">{{ selectedProject()?.description || 'Acompanhe o trabalho e mantenha sua equipe em sintonia.' }}</p></div><div class="heading-actions"><button class="secondary-button" type="button" (click)="openProjectForm(selectedProject())">Editar projeto</button><button class="primary-button" type="button" (click)="openProjectForm()">+ Novo projeto</button></div></div>
-          <div class="board-toolbar"><div class="board-label"><span class="board-symbol" aria-hidden="true">▦</span><strong>Quadro Kanban</strong><span class="task-total">{{ projectTasks().length }} tarefas</span></div><form class="task-entry" (ngSubmit)="addTask()"><input aria-label="Título da nova tarefa" placeholder="Adicionar uma tarefa..." [ngModel]="taskTitle()" (ngModelChange)="taskTitle.set($event)" name="taskTitle" maxlength="120" /><button class="primary-button" type="submit" [disabled]="!taskTitle().trim() || isSavingTask()">{{ isSavingTask() ? 'Adicionando...' : 'Adicionar' }}</button></form></div>
+          <div class="board-toolbar"><div class="board-label"><span class="board-symbol" aria-hidden="true">▦</span><strong>Quadro Kanban</strong><span class="task-total">{{ visibleTaskCount() }} de {{ projectTasks().length }} tarefas</span></div><form class="task-entry" (ngSubmit)="addTask()"><input aria-label="Título da nova tarefa" placeholder="Adicionar uma tarefa..." [ngModel]="taskTitle()" (ngModelChange)="taskTitle.set($event)" name="taskTitle" maxlength="120" /><button class="primary-button" type="submit" [disabled]="!taskTitle().trim() || isSavingTask()">{{ isSavingTask() ? 'Adicionando...' : 'Adicionar' }}</button></form></div>
+          <div class="board-filters" aria-label="Filtros do quadro">
+            <div class="sla-filter-group" role="group" aria-label="Filtrar por prazo">
+              @for (filter of slaFilters; track filter.value) {
+                <button
+                  class="filter-button"
+                  type="button"
+                  [class.is-active]="slaFilter() === filter.value"
+                  [class.filter-overdue]="filter.value === 'OVERDUE'"
+                  [class.filter-due-today]="filter.value === 'DUE_TODAY'"
+                  [class.filter-on-track]="filter.value === 'ON_TRACK'"
+                  [attr.aria-pressed]="slaFilter() === filter.value"
+                  (click)="slaFilter.set(filter.value)"
+                >{{ filter.label }}</button>
+              }
+            </div>
+            <label class="priority-filter">
+              <span>Prioridade</span>
+              <select
+                aria-label="Filtrar por prioridade"
+                [ngModel]="priorityFilter()"
+                (ngModelChange)="priorityFilter.set($event)"
+                name="priorityFilter"
+              >
+                <option value="ALL">Todas</option>
+                @for (priority of priorities; track priority.value) {
+                  <option [value]="priority.value">{{ priority.label }}</option>
+                }
+              </select>
+            </label>
+          </div>
           <section class="kanban-board" aria-label="Quadro de tarefas" cdkDropListGroup>
             @for (column of columns; track column.status) {
-              <section class="kanban-column" [attr.aria-label]="column.label"><header class="column-heading"><span [class]="'column-indicator ' + column.tone" aria-hidden="true"></span><h2>{{ column.label }}</h2><span class="column-count">{{ tasksFor(column.status).length }}</span></header><div class="task-list" cdkDropList [id]="column.id" [cdkDropListData]="column.items()" (cdkDropListDropped)="drop($event)">
+              <section class="kanban-column" [attr.aria-label]="column.label"><header class="column-heading"><span [class]="'column-indicator ' + column.tone" aria-hidden="true"></span><h2>{{ column.label }}</h2><span class="column-count">{{ tasksFor(column.status).length }}</span></header><div class="task-list" cdkDropList [id]="column.id" [cdkDropListData]="column.items()" [cdkDropListDisabled]="isTaskFilterActive()" (cdkDropListDropped)="drop($event)">
                 @for (task of tasksFor(column.status); track task.id) {
-                  <article class="task-card" cdkDrag [cdkDragData]="task"><div class="task-drag-placeholder" *cdkDragPlaceholder></div><div class="task-card-top"><span class="priority-badge" [class]="'priority-badge priority-' + task.priority">{{ priorities.find(priority => priority.value === task.priority)?.label }}</span><span class="drag-handle" cdkDragHandle aria-hidden="true" title="Arraste para mover">⠿</span></div><p>{{ task.title }}</p><div class="task-card-footer"><span class="task-key">PF-{{ task.id }}</span><div class="task-controls"><label class="visually-hidden" [for]="'priority-' + task.id">Prioridade de {{ task.title }}</label><select [id]="'priority-' + task.id" [value]="task.priority" (change)="changeTaskPriority(task, $any($event.target).value)" aria-label="Alterar prioridade da tarefa">@for (priority of priorities; track priority.value) { <option [value]="priority.value">{{ priority.label }}</option> }</select><button class="task-delete" type="button" (click)="deleteTask(task)" [attr.aria-label]="'Excluir tarefa ' + task.title" title="Excluir tarefa">×</button></div></div></article>
-                } @empty { <div class="column-empty">Nenhuma tarefa por aqui.</div> }
+                  <article class="task-card" role="group" tabindex="0" [attr.aria-label]="'Tarefa PF-' + task.id + ': ' + task.title + '. Pressione Enter para ver detalhes.'" cdkDrag [cdkDragData]="task" [cdkDragDisabled]="isTaskFilterActive() || isTaskStatusSaving(task.id)" (click)="openTaskDetails(task)" (keydown.enter)="handleTaskCardKeydown($event, task)">
+                    <div class="task-drag-placeholder" *cdkDragPlaceholder></div>
+                    <div class="task-card-top"><span class="priority-badge" [class]="'priority-badge priority-' + task.priority">{{ priorities.find(priority => priority.value === task.priority)?.label }}</span><span class="drag-handle" cdkDragHandle aria-hidden="true" title="Arraste para mover">⠿</span></div>
+                    <p>{{ task.title }}</p>
+                    <div class="task-card-footer"><span class="task-key">PF-{{ task.id }}</span><div class="task-footer-actions">
+                    @if (taskSla(task); as sla) {
+                      <span class="sla-badge" [class]="'sla-badge sla-' + sla.status.toLowerCase()" [attr.aria-label]="'SLA: ' + sla.label">
+                        <span class="sla-clock" aria-hidden="true">◷</span>{{ sla.label }}
+                      </span>
+                    }
+                    <div class="task-controls" (click)="$event.stopPropagation()">
+                      <label class="visually-hidden" [for]="'priority-' + task.id">Prioridade de {{ task.title }}</label>
+                      <select [id]="'priority-' + task.id" [value]="task.priority" (change)="changeTaskPriority(task, $any($event.target).value)" aria-label="Alterar prioridade da tarefa">@for (priority of priorities; track priority.value) { <option [value]="priority.value">{{ priority.label }}</option> }</select>
+                      <button class="task-delete" type="button" (click)="deleteTask(task)" [attr.aria-label]="'Excluir tarefa ' + task.title" title="Excluir tarefa">×</button>
+                    </div></div></div>
+                  </article>
+                } @empty { <div class="column-empty">{{ isTaskFilterActive() ? 'Nenhuma tarefa corresponde aos filtros.' : 'Nenhuma tarefa por aqui.' }}</div> }
               </div></section>
             }
           </section>
@@ -81,3 +127,10 @@
   </main>
 </div>
 @if (projectForm() !== undefined) { <app-project-form [project]="projectForm() ?? null" (saved)="saveProject($event)" (cancelled)="projectForm.set(undefined)" /> }
+@if (selectedTask(); as task) {
+  <app-task-details-modal
+    [task]="task"
+    (closed)="selectedTask.set(null)"
+    (saved)="updateTaskFromDetails($event)"
+  />
+}

@@ -164,19 +164,48 @@ app.get('/tasks', async (req, res) => {
   }
 });
 
+// GET: Histórico de alterações de status de uma tarefa
+app.get('/tasks/:id/history', async (req, res) => {
+  try {
+    const taskId = Number(req.params.id);
+    if (!Number.isInteger(taskId) || taskId <= 0) {
+      return res.status(400).json({ error: 'ID de tarefa inválido' });
+    }
+
+    const task = await prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) {
+      return res.status(404).json({ error: 'Tarefa não encontrada' });
+    }
+
+    const history = await prisma.taskHistory.findMany({
+      where: { taskId },
+      orderBy: { changedAt: 'desc' },
+    });
+    res.json(history);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar histórico da tarefa' });
+  }
+});
+
 // POST: Criar uma nova tarefa vinculada a um projeto
 app.post('/tasks', async (req, res) => {
   try {
-    const { title, projectId } = req.body;
+    const { title, description, projectId, dueDate } = req.body;
 
     if (!title || !projectId) {
       return res.status(400).json({ error: 'Título e projectId são obrigatórios' });
+    }
+    if (dueDate !== undefined && dueDate !== null && !isValidDateOnly(dueDate)) {
+      return res.status(400).json({ error: 'Data de prazo inválida' });
     }
 
     const newTask = await prisma.task.create({
       data: {
         title,
-        projectId: Number(projectId)
+        description,
+        projectId: Number(projectId),
+        ...(dueDate !== undefined && { dueDate: dueDate === null ? null : new Date(`${dueDate}T00:00:00.000Z`) }),
       }
     });
 
@@ -191,7 +220,7 @@ app.post('/tasks', async (req, res) => {
 app.patch('/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, completed, status, priority } = req.body;
+    const { title, description, completed, status, priority, dueDate } = req.body;
     const validStatuses = ['PENDING', 'IN_PROGRESS', 'DONE'];
     const validPriorities = ['URGENT', 'HIGH', 'MEDIUM', 'LOW'];
 
@@ -201,10 +230,15 @@ app.patch('/tasks/:id', async (req, res) => {
     if (priority !== undefined && !validPriorities.includes(priority)) {
       return res.status(400).json({ error: 'Prioridade de tarefa inválida' });
     }
+    if (dueDate !== undefined && dueDate !== null && !isValidDateOnly(dueDate)) {
+      return res.status(400).json({ error: 'Data de prazo inválida' });
+    }
 
     const data = {};
     if (title !== undefined) data.title = title;
+    if (description !== undefined) data.description = description;
     if (priority !== undefined) data.priority = priority;
+    if (dueDate !== undefined) data.dueDate = dueDate === null ? null : new Date(`${dueDate}T00:00:00.000Z`);
     if (status !== undefined) {
       data.status = status;
       data.completed = status === 'DONE';
@@ -232,6 +266,7 @@ app.patch('/tasks/:id', async (req, res) => {
         await transaction.taskHistory.create({
           data: {
             taskId,
+            previousStatus: previousTask.status,
             status: updated.status,
           },
         });
@@ -250,6 +285,12 @@ app.patch('/tasks/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro ao atualizar tarefa' });
   }
 });
+
+function isValidDateOnly(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
 
 // DELETE: Remover uma tarefa
 app.delete('/tasks/:id', async (req, res) => {
