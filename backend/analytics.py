@@ -117,7 +117,7 @@ def calculate_metrics(
 
             completed_tasks = tasks.loc[tasks["isCompleted"]].copy()
             completed_tasks["createdTime"] = pd.to_datetime(completed_tasks["createdAt"], errors="coerce", utc=True)
-            completed_tasks["completedTime"] = completed_tasks["id"].map(completion_events)
+            completed_tasks["completedTime"] = completed_tasks["id"].map(completion_events.to_dict())
             completed_tasks = completed_tasks.dropna(subset=["createdTime", "completedTime"])
             completed_tasks["leadTimeDays"] = (
                 completed_tasks["completedTime"] - completed_tasks["createdTime"]
